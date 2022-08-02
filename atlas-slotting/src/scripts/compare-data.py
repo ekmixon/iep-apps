@@ -39,30 +39,26 @@ def parse_args() -> Namespace:
 def get_edda_data(args: Namespace, region: str) -> List[Dict]:
     url = f'http://{args.edda_name.format(region)}/api/v2/group/autoScalingGroups;_expand'
     r = requests.get(url)
-    if not r.ok:
-        print(f'ERROR: Failed to load Edda data from {url}')
-        sys.exit(1)
-    else:
+    if r.ok:
         return [asg for asg in r.json() if asg['name'].split('-')[0] in args.app_name]
+    print(f'ERROR: Failed to load Edda data from {url}')
+    sys.exit(1)
 
 
 def get_slotting_data(args: Namespace, region: str) -> List[Dict]:
     url = f'http://{args.slotting_name.format(region)}/api/v1/autoScalingGroups?verbose=true'
     r = requests.get(url)
-    if not r.ok:
-        print(f'ERROR: Failed to load Edda data from {url}')
-        sys.exit(1)
-    else:
+    if r.ok:
         return [asg for asg in r.json() if asg['name'].split('-')[0] in args.app_name]
+    print(f'ERROR: Failed to load Edda data from {url}')
+    sys.exit(1)
 
 
 def build_slot_map(asgs):
     res = {}
 
     for asg in asgs:
-        slots = {}
-        for i in asg['instances']:
-            slots[i['instanceId']] = i['slot']
+        slots = {i['instanceId']: i['slot'] for i in asg['instances']}
         res[asg['name']] = slots
 
     return res
